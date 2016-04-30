@@ -41,12 +41,19 @@ public class Grafo {
 	List<Vertice> vertices;
 	List<Aresta> arestas;
 	List<Boolean> visitedFocos;
+	List<Vertice> minPathVertices;
+	int minPath = Integer.MAX_VALUE;
 
 	public Grafo() {
 		vertices = new ArrayList<Vertice>();
 		arestas = new ArrayList<Aresta>();
+		minPathVertices = new ArrayList<Vertice>();
 		visitedFocos = new ArrayList<Boolean>();
 	}
+
+	//	Vertice getVertice(String nome){
+	//		vertices.contains(nome);
+	//	}
 
 	Vertice addVertice(String nome) {
 		Vertice v = new Vertice(nome);
@@ -143,14 +150,23 @@ public class Grafo {
 		}
 		else{
 			Vertice aux = v;
+			int cont = 0;
+			List<Vertice> pathVertices = new Vector<Vertice>();
 			while(aux.nome != origem.nome){
-				System.out.println(aux.nome);
+				cont++;
+				pathVertices.add(aux);
+				//System.out.println(aux.nome);
 				aux = aux.pai;				
 			}
-			System.out.println(aux.nome);
+			pathVertices.add(aux);
+			//System.out.println(aux.nome);
+			if (cont < this.minPath){
+				minPathVertices = pathVertices;
+				minPath = cont;
+			}
 		}
 		v.cor = "PRETA";
-		
+
 	}
 
 	public void clearVisistedFocos(){
@@ -175,13 +191,51 @@ public class Grafo {
 
 	public void dfsAll(){
 		for (int i = 0; i < vertices.size(); i++) {
-			System.out.println("Busca a partir do vertice: "+vertices.get(i).nome);
+			//System.out.println("Busca a partir do vertice: "+vertices.get(i).nome);
 			dfs(vertices.get(i));
 		}
 	}
 
+	public String showMinPath(){
+		StringBuffer resp = new StringBuffer();
+		for (int i = minPathVertices.size()-1; i >= 0; i--) {
+			resp.append(minPathVertices.get(i).nome);
+			resp.append(" ");
+		}
+		String respStr = resp.substring(0, resp.length()-1);
+		return respStr;
+	}
+
 	public static void main(String[] args) {
+		int V, E, F;
+		Vertice vertices[];
+		Aresta arestas[];
 		Grafo g = new Grafo();
+		Arquivo arq = new Arquivo("entradas.in", "saidas.out");
+		V = arq.readInt();
+		E = arq.readInt();
+		vertices = new Vertice[V];
+		arestas = new Aresta[E];
+		for (int i = 0; i < V; i++) {
+			String nome = String.valueOf(i+1); 
+			vertices[i] = g.addVertice(nome);			
+		}
+		for (int i = 0; i < E; i++) {
+			int v = arq.readInt();
+			int u = arq.readInt();
+			arestas[i] = g.addAresta(vertices[v-1], vertices[u-1]);
+		}
+		F = arq.readInt();
+		for (int i = 0; i < V; i++) {
+			vertices[i] = g.vertices.get(i);
+			while(!arq.isEndOfLine()){
+				int foco = arq.readInt();
+				vertices[i].focos.add(foco);				
+			}
+			g.vertices.set(i, vertices[i]);
+		}
+		System.out.println(g);
+		/*
 		Vertice s = g.addVertice("s");
 		Vertice t = g.addVertice("t");
 		Vertice y = g.addVertice("y");
@@ -196,8 +250,11 @@ public class Grafo {
 		Aresta yt = g.addAresta(y, t);
 		Aresta tk = g.addAresta(t, k);
 		Aresta ky = g.addAresta(k, y);
-		g.dfsAll();
+		//	g.dfsAll();
+		//System.out.println(g.showMinPath());
 		//	g.getTrees(y);
 		//System.out.println(g);
+		 * 
+		 */
 	}
 }
