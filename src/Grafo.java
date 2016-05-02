@@ -7,16 +7,20 @@ import java.util.Vector;
 
 public class Grafo {
 	public class Vertice {
+		int d;
 		String nome;
 		String cor;
 		Vertice pai;
 		List<Aresta> adj;
 		List<Integer> focos;
+		List<Boolean> focosVisitados;		
 
 		Vertice(String nome) {
+			this.d = 0;
 			this.nome = nome;
 			this.adj = new ArrayList<Aresta>();
 			this.focos = new ArrayList<Integer>();
+			this.focosVisitados = new ArrayList<Boolean>();
 		}
 
 		void addAdj(Aresta e) {
@@ -37,6 +41,7 @@ public class Grafo {
 			this.destino = destino;
 		}
 	}
+	int countClear;
 	Vector<List<Vertice>> trees;
 	List<Vertice> vertices;
 	List<Aresta> arestas;
@@ -45,52 +50,93 @@ public class Grafo {
 	int minPath = Integer.MAX_VALUE;
 
 	public Grafo() {
+		this.countClear = 0;
 		vertices = new ArrayList<Vertice>();
 		arestas = new ArrayList<Aresta>();
 		minPathVertices = new ArrayList<Vertice>();
 		visitedFocos = new ArrayList<Boolean>();
-		trees = new Vector<List<Vertice>>();
+		trees = new Vector<List<Vertice>>(); 
 	}
 
-	//	Vertice getVertice(String nome){
-	//		vertices.contains(nome);
-	//	}
-	
-	void createTrees(){
-		for (int i = 0; i < vertices.size(); i++) {
-			clearVisistedFocos();
-			List<Vertice> verticesTree = new ArrayList<Grafo.Vertice>();			
-			Vertice aux = vertices.get(i);
-			markFocusFromVertex(aux);
-			verticesTree.add(aux);			
-			while (aux.pai != null && !allFocosVisited(visitedFocos)){
-				verticesTree.add(aux.pai);
-				markFocusFromVertex(aux.pai);
-				aux = aux.pai;
-			}
-			if(allFocosVisited(visitedFocos)){
-				trees.add(verticesTree);
-			}
-		}
-	}
-	
-	public List<Vertice> minTree(){
-		int minTam = Integer.MAX_VALUE;
+	/**
+	 * 
+	 * @return primeiro menor caminho da coleção de árvores de caminhos com todos os focos
+	 */
+	List<Vertice> minTree(){
+		int minPath = Integer.MAX_VALUE; 
 		List<Vertice> result = null;
 		for (int i = 0; i < trees.size(); i++) {
-			if(trees.get(i).size() < minTam)
-				minTam = trees.get(i).size();
+			if (trees.get(i).size() < minPath){
+				minPath = trees.get(i).size();
 				result = trees.get(i);
+			}
 		}
 		return result;
 	}
-	
-	void createVisitedFocos(int F){		
-		for (int i = 0; i < F; i++) {
-			visitedFocos.add(false);
+
+	void createTree(Vertice v, Vertice origem){
+		//Aresta ultimaAresta = null;
+		Vertice aux = v;
+		markFocusFromVertex(aux);
+		List<Vertice> verticeTree = new Vector<Grafo.Vertice>();
+		verticeTree.add(aux);			
+		System.out.println("Arvore: ");
+		System.out.println(aux.nome);
+		while (aux.pai != null){
+			//ultimaAresta = new Aresta(aux, aux.pai);
+			if(aux.nome == origem.nome)
+				break;
+			System.out.println(aux.pai.nome);
+			verticeTree.add(aux.pai);
+			markFocusFromVertex(aux.pai);
+			aux = aux.pai;
+
+		}
+		if(allFocosVisited(visitedFocos)){
+			trees.add(verticeTree);
+		}
+		//		if(!allFocosVisited(aux.focosVisitados)){
+		//
+		//			Aresta reversa = new Aresta(ultimaAresta.destino, ultimaAresta.origem);
+		//			this.removeAresta(aux, reversa);
+		//			dfs(aux);
+		//		}
+	}
+
+	//	public List<Vertice> minTree(){
+	//		int minTam = Integer.MAX_VALUE;
+	//		List<Vertice> result = null;
+	//		for (int i = 0; i < trees.size(); i++) {
+	//			if(trees.get(i).size() < minTam){
+	//				minTam = trees.get(i).size();
+	//				result = trees.get(i);
+	//			}
+	//		}
+	//		return result;
+	//	}
+
+	void removeAresta(Vertice v, Aresta aresta){
+		for (int i = 0; i < v.adj.size(); i++) {
+			if(v.adj.get(i).origem.nome == aresta.origem.nome && v.adj.get(i).destino.nome 
+					== aresta.destino.nome){
+				v.adj.remove(i);
+			}
 		}
 	}
-	
+
+	void createVisitedFocos(int F){		
+		for (int i = 0; i < F; i++) {
+			visitedFocos.add(false);			
+		}
+		inicializeFocosVisitados();
+	}
+
+	void inicializeFocosVisitados(){
+		for (int i = 0; i < vertices.size(); i++) {
+			vertices.get(i).focosVisitados = visitedFocos;
+		}
+	}
+
 	Vertice addVertice(String nome) {
 		Vertice v = new Vertice(nome);
 		vertices.add(v);
@@ -101,11 +147,15 @@ public class Grafo {
 		v.addFoco(foco);		
 	}
 
-	Aresta addAresta(Vertice origem, Vertice destino) {
+	//Modificando método para incluir a aresta em ambos os sentidos, como
+	//sendo um grafo 'não orientado'
+	void addAresta(Vertice origem, Vertice destino) {
 		Aresta e = new Aresta(origem, destino);
+		Aresta f = new Aresta(destino, origem);
 		origem.addAdj(e);
+		destino.addAdj(f);
 		arestas.add(e);
-		return e;
+		arestas.add(f);
 	}
 
 	public String toString() {
@@ -120,39 +170,13 @@ public class Grafo {
 		}
 		return r;
 	}
-	
+
 	public void markFocusFromVertex(Vertice v){
 		for (int i = 0; i < v.focos.size(); i++) {
 			int foco = v.focos.get(i);
 			visitedFocos.set(foco-1, true);
 		}
 	}
-	
-	//		Vector<List<Vertice>> trees = new Vector<List<Vertice>>();
-	//		for (int i = 0; i < v.pai.size(); i++) {
-	//			//indicePai = i;
-	//			List<Vertice> currentTree = new ArrayList<Vertice>();
-	//			Vertice paiCurrentTree = v.pai.get(i);
-	//			System.out.println(paiCurrentTree.nome);
-	//			
-	//			currentTree.add(v);
-	//			System.out.println("Arvore "+ i);
-	//			System.out.println(v.nome);
-	//			while(paiCurrentTree != null){
-	//				currentTree.add(paiCurrentTree);
-	//				System.out.println(paiCurrentTree.nome);
-	//				if(paiCurrentTree.pai == null){
-	//					paiCurrentTree = null;
-	//				}
-	//				else{
-	//					//if(indicePai <= 0) indicePai = 0;
-	//					//paiCurrentTree = paiCurrentTree.pai.get();
-	//				}
-	//			}
-	//			trees.add(currentTree);
-	//		}
-	//		return trees;
-	//	}
 
 	public boolean allFocosVisited(List<Boolean> visitedFocos){
 		for (int i = 0; i < visitedFocos.size(); i++) {
@@ -163,52 +187,61 @@ public class Grafo {
 		return true;
 	}
 
-	public void dfs_visit(Vertice v, Vertice origem, List<Boolean> visitedFocos2){
-		v.cor = "CINZA";
+	public void dfs_visit(Vertice v, Vertice origem){
+		//	v.cor = "CINZA";
 
-		//System.out.println("vertice: "+v.nome);
+		System.out.println("vertice: "+v.nome);
 
-		//para cada foco na lista de focos do vertice, verificar
-		//no hash se o mesmo foi visitado e marca-o
 		for (int i = 0; i < v.focos.size(); i++) {
 			int valueFoco = v.focos.get(i);
 			System.out.println("foco: "+v.focos.get(i));
 
 			//se o foco nao foi visto (atingido) 
-			if(!visitedFocos2.get(valueFoco-1)){
+			if(!visitedFocos.get(valueFoco-1)){
 				//System.out.println("passou");
-				visitedFocos2.set(valueFoco-1, true); 
+				visitedFocos.set(valueFoco-1, true);
+				//v.focosVisitados.set(valueFoco-1, true);
 			}
 		}    	    
-		if(!allFocosVisited(visitedFocos2)){
-			for (int i = 0; i < v.adj.size(); i++) {
-				Vertice u = v.adj.get(i).destino; 
-				//if(u.cor == "BRANCA"){
-				u.pai = v;
-				dfs_visit(u, origem, visitedFocos2);
-				//}
+		//if(!allFocosVisited(visitedFocos2)){
+		for (int i = 0; i < v.adj.size(); i++) {
+			Vertice u = v.adj.get(i).destino;
+			//u.focosVisitados = v.focosVisitados;
+			//System.out.println(u.nome);
+			//System.out.println(u.cor);
+			if(u.cor == "BRANCA" && !allFocosVisited(visitedFocos)){
+				if(u.d == 0){
+					v.d = v.d+1;
+					u.d = v.d;
+					u.pai = v;
+					if(v.pai == null){
+						dfs_visit(u, origem);
+					}
+					else if (!u.equals(origem) && !v.pai.equals(u))
+						dfs_visit(u, origem);
+				}
+			}
+			//else if(!u.cor.equalsIgnoreCase("BRANCA")){
+			//retornar arvore a partir de v
+			//createTree a partir de v
+			else{
+				System.out.println("Lista de adju de "+v.nome);
+				if(allFocosVisited(visitedFocos)){
+					System.out.println("Todos os focos visitados");
+					clearAllTime();
+					clearVisistedFocos();
+					createTree(v, origem);
+				}
 			}
 		}
-//		else{
-//			//System.out.println("passou");
-//			Vertice aux = v;
-//			int cont = 0;
-//			List<Vertice> pathVertices = new Vector<Vertice>();
-//			while(aux.nome != origem.nome){
-//				cont++;
-//				pathVertices.add(aux);
-//				//System.out.println(aux.nome);
-//				aux = aux.pai;				
-//			}
-//			pathVertices.add(aux);
-//			//System.out.println(aux.nome);
-//			if (cont < this.minPath){
-//				minPathVertices = pathVertices;
-//				minPath = cont;
-//			}
-//		}
-//		v.cor = "PRETA";
+		//	v.cor = "PRETA";
 
+	}
+
+	public void clearAllTime(){
+		for (int i = 0; i < vertices.size(); i++) {
+			vertices.get(i).d = 0;
+		}
 	}
 
 	public void clearVisistedFocos(){
@@ -222,11 +255,10 @@ public class Grafo {
 			vertices.get(i).cor = "BRANCA";
 			vertices.get(i).pai = null;
 		}
-		clearVisistedFocos();
 
 		//for (int i = 0; i < vertices.size(); i++) {
 		//if (vertices.get(i).cor == "BRANCA"){
-		dfs_visit(v, v, visitedFocos);
+		dfs_visit(v, v);
 		//	}
 		//}
 	}
@@ -251,13 +283,11 @@ public class Grafo {
 	public static void main(String[] args) {
 		int V, E, F;
 		Vertice vertices[];
-		Aresta arestas[];
 		Grafo g = new Grafo();
-		Arquivo arq = new Arquivo("entradas.in", "saidas.out");
+		Arquivo arq = new Arquivo("in1", "saidas1.out");
 		V = arq.readInt();
 		E = arq.readInt();
 		vertices = new Vertice[V];
-		arestas = new Aresta[E];
 		for (int i = 0; i < V; i++) {
 			String nome = String.valueOf(i+1); 
 			vertices[i] = g.addVertice(nome);			
@@ -265,9 +295,9 @@ public class Grafo {
 		for (int i = 0; i < E; i++) {
 			int v = arq.readInt();
 			int u = arq.readInt();
-			arestas[i] = g.addAresta(vertices[v-1], vertices[u-1]);
+			g.addAresta(vertices[v-1], vertices[u-1]);
 		}
-		
+
 		F = arq.readInt();	
 		g.createVisitedFocos(F);
 		for (int i = 0; i < V; i++) {
@@ -280,16 +310,18 @@ public class Grafo {
 			}
 			g.vertices.set(i, vertices[i]);
 		}
-		g.dfs(g.vertices.get(0));
-		g.createTrees();
+		//g.dfs(g.vertices.get(3));
+		g.dfsAll();
 		List<Vertice> minTree = g.minTree();
 		StringBuffer resp = new StringBuffer();
 		String respStr = "";
-		for (int i = minTree.size()-1; i >= 0 ; i--) {
-			resp.append(minTree.get(i).nome);
-			resp.append(" ");
+		if(minTree != null){
+			for (int i = minTree.size()-1; i >= 0 ; i--) {
+				resp.append(minTree.get(i).nome);
+				resp.append(" ");
+			}
+			respStr = resp.substring(0, resp.length()-1);
 		}
-		respStr = resp.substring(0, resp.length()-1);
 		arq.print(respStr);
 		arq.close();
 		/*
