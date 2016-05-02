@@ -42,6 +42,7 @@ public class Grafo {
 		}
 	}
 	int countClear;
+	List<Vertice> currentTree;
 	Vector<List<Vertice>> trees;
 	List<Vertice> vertices;
 	List<Aresta> arestas;
@@ -56,6 +57,33 @@ public class Grafo {
 		minPathVertices = new ArrayList<Vertice>();
 		visitedFocos = new ArrayList<Boolean>();
 		trees = new Vector<List<Vertice>>(); 
+		currentTree = new Vector<Grafo.Vertice>();
+	}
+	
+	public List<Vertice> intercala(List<Vertice> v, int p, int r){
+		Vertice aux = null;
+		for (int i = p; i < r-p; i++) {
+			if(Integer.valueOf(v.get(i-p).nome) > Integer.valueOf(v.get(r).nome)){
+				aux = v.get(i-p);
+				v.set(i-p, v.get(r));
+				v.set(r, aux);
+			}
+		}
+		return v;
+	}
+	
+	public List<Vertice> quickSort(List<Vertice> v, int p, int r){
+		if(p < r){
+			int q = (p+r)/2;
+			quickSort(v, p, q);
+			quickSort(v, q+1, r);
+			v = intercala(v, p, r);
+		}
+		return v;
+	}
+	
+	public void sortTree(List<Vertice> v){
+		
 	}
 
 	/**
@@ -71,6 +99,7 @@ public class Grafo {
 				result = trees.get(i);
 			}
 		}
+		result = quickSort(result, 0, result.size()-1);
 		return result;
 	}
 
@@ -102,18 +131,6 @@ public class Grafo {
 		//			dfs(aux);
 		//		}
 	}
-
-	//	public List<Vertice> minTree(){
-	//		int minTam = Integer.MAX_VALUE;
-	//		List<Vertice> result = null;
-	//		for (int i = 0; i < trees.size(); i++) {
-	//			if(trees.get(i).size() < minTam){
-	//				minTam = trees.get(i).size();
-	//				result = trees.get(i);
-	//			}
-	//		}
-	//		return result;
-	//	}
 
 	void removeAresta(Vertice v, Aresta aresta){
 		for (int i = 0; i < v.adj.size(); i++) {
@@ -191,7 +208,7 @@ public class Grafo {
 		//	v.cor = "CINZA";
 
 		System.out.println("vertice: "+v.nome);
-
+		currentTree.add(v);
 		for (int i = 0; i < v.focos.size(); i++) {
 			int valueFoco = v.focos.get(i);
 			System.out.println("foco: "+v.focos.get(i));
@@ -228,9 +245,11 @@ public class Grafo {
 				System.out.println("Lista de adju de "+v.nome);
 				if(allFocosVisited(visitedFocos)){
 					System.out.println("Todos os focos visitados");
+					trees.add(currentTree);
+					currentTree = new Vector<Grafo.Vertice>();
 					clearAllTime();
 					clearVisistedFocos();
-					createTree(v, origem);
+					//createTree(v, origem);
 				}
 			}
 		}
@@ -316,7 +335,7 @@ public class Grafo {
 		StringBuffer resp = new StringBuffer();
 		String respStr = "";
 		if(minTree != null){
-			for (int i = minTree.size()-1; i >= 0 ; i--) {
+			for (int i = 0; i < minTree.size() ; i++) {
 				resp.append(minTree.get(i).nome);
 				resp.append(" ");
 			}
