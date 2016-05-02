@@ -8,14 +8,14 @@ import java.util.Vector;
 public class Grafo {
 	public class Vertice {
 		int d;
-		String nome;
+		int nome;
 		String cor;
 		Vertice pai;
 		List<Aresta> adj;
 		List<Integer> focos;
 		List<Boolean> focosVisitados;		
 
-		Vertice(String nome) {
+		Vertice(int nome) {
 			this.d = 0;
 			this.nome = nome;
 			this.adj = new ArrayList<Aresta>();
@@ -42,95 +42,155 @@ public class Grafo {
 		}
 	}
 	int countClear;
-	List<Vertice> currentTree;
+	List<Vertice> vertices, currentTree, minTree;
 	Vector<List<Vertice>> trees;
-	List<Vertice> vertices;
 	List<Aresta> arestas;
 	List<Boolean> visitedFocos;
-	List<Vertice> minPathVertices;
 	int minPath = Integer.MAX_VALUE;
 
 	public Grafo() {
 		this.countClear = 0;
 		vertices = new ArrayList<Vertice>();
 		arestas = new ArrayList<Aresta>();
-		minPathVertices = new ArrayList<Vertice>();
 		visitedFocos = new ArrayList<Boolean>();
 		trees = new Vector<List<Vertice>>(); 
 		currentTree = new Vector<Grafo.Vertice>();
+		minTree = new Vector<Grafo.Vertice>();
 	}
-	
-	public List<Vertice> intercala(List<Vertice> v, int p, int r){
-		Vertice aux = null;
-		for (int i = p; i < r-p; i++) {
-			if(Integer.valueOf(v.get(i-p).nome) > Integer.valueOf(v.get(r).nome)){
-				aux = v.get(i-p);
-				v.set(i-p, v.get(r));
-				v.set(r, aux);
+
+	int partition(int arr[], int left, int right)
+	{
+		int i = left, j = right;
+		int tmp;
+		int pivot = arr[(left + right) / 2];
+
+		while (i <= j) {
+			while (arr[i] < pivot)
+				i++;
+			while (arr[j] > pivot)
+				j--;
+			if (i <= j) {
+				tmp = arr[i];
+				arr[i] = arr[j];
+				arr[j] = tmp;
+				i++;
+				j--;
 			}
-		}
-		return v;
+		};
+
+		return i;
 	}
-	
-	public List<Vertice> quickSort(List<Vertice> v, int p, int r){
-		if(p < r){
-			int q = (p+r)/2;
-			quickSort(v, p, q);
-			quickSort(v, q+1, r);
-			v = intercala(v, p, r);
-		}
-		return v;
+
+	void quickSort(int arr[], int left, int right) {
+		int index = partition(arr, left, right);
+		if (left < index - 1)
+			quickSort(arr, left, index - 1);
+		if (index < right)
+			quickSort(arr, index, right);
 	}
-	
-	public void sortTree(List<Vertice> v){
-		
-	}
+
+	//	public List<Vertice> intercala(List<Vertice> v, int p, int r){
+	//		int pivo = v.get(p).nome;
+	//		int i = p+1, f = r;
+	//		while(i <= f){
+	//			if(pivo >= v.get(i).nome){
+	//				i++;
+	//			}
+	//			else if(pivo < v.get(f).nome){
+	//				f--;
+	//			}
+	//			else{
+	//				int aux = v.get(i).nome;
+	//				v.get(i).nome = v.get(f).nome;
+	//				v.get(f).nome = aux;
+	//				i++;f--;
+	//			}
+	//		}
+	//		v.set(p, v.get(f));
+	//		v.set(f, v.get(p));
+	//		return v;
+	//	}
+	//	
+	//	public List<Vertice> quickSort(List<Vertice> v, int p, int r){
+	//		if(p < r){
+	//			int q = (p+r)/2;
+	//			v = quickSort(v, p, q);
+	//			v = quickSort(v, q+1, r);
+	//			intercala(v, p, r);
+	//		}
+	//		return v;
+	//	}
 
 	/**
 	 * 
 	 * @return primeiro menor caminho da coleção de árvores de caminhos com todos os focos
 	 */
-	List<Vertice> minTree(){
+	int[] minTree(){
 		int minPath = Integer.MAX_VALUE; 
-		List<Vertice> result = null;
 		for (int i = 0; i < trees.size(); i++) {
 			if (trees.get(i).size() < minPath){
 				minPath = trees.get(i).size();
-				result = trees.get(i);
+				minTree = trees.get(i);
 			}
 		}
-		result = quickSort(result, 0, result.size()-1);
+		int array[] = new int[minTree.size()]; 
+		for (int i = 0; i < minTree.size(); i++) {
+			array[i] = minTree.get(i).nome;
+		}
+		quickSort(array, 0, array.length-1);
+		return array;
+	}
+	
+	public List<Vertice> minSubsetAllFocos(int[] array, List<Vertice> v){
+		int i = 0;		
+		List<Vertice> result = new Vector<Grafo.Vertice>();
+		this.clearVisistedFocos();
+		while(i < array.length){
+			Vertice aux = vertices.get(array[array.length-1-i]-1);
+			for (int j = 0; j < aux.focos.size(); j++) {
+				int foco = aux.focos.get(j);
+				if(visitedFocos.get(foco-1).equals(false)){
+					visitedFocos.set(foco-1, true);
+				}
+			}
+			System.out.println(aux.nome);
+			result.add(aux);
+			if(allFocosVisited(visitedFocos)){
+				return result;
+			}
+			i++;
+		}
 		return result;
 	}
 
-	void createTree(Vertice v, Vertice origem){
-		//Aresta ultimaAresta = null;
-		Vertice aux = v;
-		markFocusFromVertex(aux);
-		List<Vertice> verticeTree = new Vector<Grafo.Vertice>();
-		verticeTree.add(aux);			
-		System.out.println("Arvore: ");
-		System.out.println(aux.nome);
-		while (aux.pai != null){
-			//ultimaAresta = new Aresta(aux, aux.pai);
-			if(aux.nome == origem.nome)
-				break;
-			System.out.println(aux.pai.nome);
-			verticeTree.add(aux.pai);
-			markFocusFromVertex(aux.pai);
-			aux = aux.pai;
-
-		}
-		if(allFocosVisited(visitedFocos)){
-			trees.add(verticeTree);
-		}
-		//		if(!allFocosVisited(aux.focosVisitados)){
-		//
-		//			Aresta reversa = new Aresta(ultimaAresta.destino, ultimaAresta.origem);
-		//			this.removeAresta(aux, reversa);
-		//			dfs(aux);
-		//		}
-	}
+//	void createTree(Vertice v, Vertice origem){
+//		//Aresta ultimaAresta = null;
+//		Vertice aux = v;
+//		markFocusFromVertex(aux);
+//		List<Vertice> verticeTree = new Vector<Grafo.Vertice>();
+//		verticeTree.add(aux);			
+//		System.out.println("Arvore: ");
+//		System.out.println(aux.nome);
+//		while (aux.pai != null){
+//			//ultimaAresta = new Aresta(aux, aux.pai);
+//			if(aux.nome == origem.nome)
+//				break;
+//			System.out.println(aux.pai.nome);
+//			verticeTree.add(aux.pai);
+//			markFocusFromVertex(aux.pai);
+//			aux = aux.pai;
+//
+//		}
+//		if(allFocosVisited(visitedFocos)){
+//			trees.add(verticeTree);
+//		}
+//		//		if(!allFocosVisited(aux.focosVisitados)){
+//		//
+//		//			Aresta reversa = new Aresta(ultimaAresta.destino, ultimaAresta.origem);
+//		//			this.removeAresta(aux, reversa);
+//		//			dfs(aux);
+//		//		}
+//	}
 
 	void removeAresta(Vertice v, Aresta aresta){
 		for (int i = 0; i < v.adj.size(); i++) {
@@ -154,7 +214,7 @@ public class Grafo {
 		}
 	}
 
-	Vertice addVertice(String nome) {
+	Vertice addVertice(int nome) {
 		Vertice v = new Vertice(nome);
 		vertices.add(v);
 		return v;
@@ -273,6 +333,7 @@ public class Grafo {
 		for (int i = 0; i < vertices.size(); i++) {
 			vertices.get(i).cor = "BRANCA";
 			vertices.get(i).pai = null;
+			vertices.get(i).d = 0;
 		}
 
 		//for (int i = 0; i < vertices.size(); i++) {
@@ -289,16 +350,6 @@ public class Grafo {
 		}
 	}
 
-	public String showMinPath(){
-		StringBuffer resp = new StringBuffer();
-		for (int i = minPathVertices.size()-1; i >= 0; i--) {
-			resp.append(minPathVertices.get(i).nome);
-			resp.append(" ");
-		}
-		String respStr = resp.substring(0, resp.length());
-		return respStr;
-	}
-
 	public static void main(String[] args) {
 		int V, E, F;
 		Vertice vertices[];
@@ -308,8 +359,7 @@ public class Grafo {
 		E = arq.readInt();
 		vertices = new Vertice[V];
 		for (int i = 0; i < V; i++) {
-			String nome = String.valueOf(i+1); 
-			vertices[i] = g.addVertice(nome);			
+			vertices[i] = g.addVertice(i+1);			
 		}
 		for (int i = 0; i < E; i++) {
 			int v = arq.readInt();
@@ -331,16 +381,17 @@ public class Grafo {
 		}
 		//g.dfs(g.vertices.get(3));
 		g.dfsAll();
-		List<Vertice> minTree = g.minTree();
+		int[] minTree = g.minTree();		
+		List<Vertice> result = g.minSubsetAllFocos(minTree, g.minTree);
 		StringBuffer resp = new StringBuffer();
 		String respStr = "";
-		if(minTree != null){
-			for (int i = 0; i < minTree.size() ; i++) {
-				resp.append(minTree.get(i).nome);
+		if(result != null){
+			for (int i = result.size()-1; i >= 0 ; i--) {
+				resp.append(result.get(i).nome);
 				resp.append(" ");
 			}
-			respStr = resp.substring(0, resp.length()-1);
 		}
+		respStr = resp.substring(0, resp.length()-1);
 		arq.print(respStr);
 		arq.close();
 		/*
