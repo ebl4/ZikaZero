@@ -1,6 +1,10 @@
 // Este Ã© um exemplo simples de implementaÃ§Ã£o de grafo orientado representado por lista
 // de adjacÃªncias
 
+// Revisão: Edson Barboza
+// Data: 02/05/2016
+// Descrição: Casos teste 5 e 7 não estão funcionando
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -9,7 +13,6 @@ public class Grafo {
 	public class Vertice {
 		int d;
 		int nome;
-		String cor;
 		Vertice pai;
 		List<Aresta> adj;
 		List<Integer> focos;
@@ -41,7 +44,6 @@ public class Grafo {
 			this.destino = destino;
 		}
 	}
-	int countClear;
 	List<Vertice> vertices, currentTree, minTree;
 	Vector<List<Vertice>> trees;
 	List<Aresta> arestas;
@@ -49,7 +51,6 @@ public class Grafo {
 	int minPath = Integer.MAX_VALUE;
 
 	public Grafo() {
-		this.countClear = 0;
 		vertices = new ArrayList<Vertice>();
 		arestas = new ArrayList<Aresta>();
 		visitedFocos = new ArrayList<Boolean>();
@@ -89,38 +90,6 @@ public class Grafo {
 			quickSort(arr, index, right);
 	}
 
-	//	public List<Vertice> intercala(List<Vertice> v, int p, int r){
-	//		int pivo = v.get(p).nome;
-	//		int i = p+1, f = r;
-	//		while(i <= f){
-	//			if(pivo >= v.get(i).nome){
-	//				i++;
-	//			}
-	//			else if(pivo < v.get(f).nome){
-	//				f--;
-	//			}
-	//			else{
-	//				int aux = v.get(i).nome;
-	//				v.get(i).nome = v.get(f).nome;
-	//				v.get(f).nome = aux;
-	//				i++;f--;
-	//			}
-	//		}
-	//		v.set(p, v.get(f));
-	//		v.set(f, v.get(p));
-	//		return v;
-	//	}
-	//	
-	//	public List<Vertice> quickSort(List<Vertice> v, int p, int r){
-	//		if(p < r){
-	//			int q = (p+r)/2;
-	//			v = quickSort(v, p, q);
-	//			v = quickSort(v, q+1, r);
-	//			intercala(v, p, r);
-	//		}
-	//		return v;
-	//	}
-
 	/**
 	 * 
 	 * @return primeiro menor caminho da coleção de árvores de caminhos com todos os focos
@@ -140,7 +109,7 @@ public class Grafo {
 		quickSort(array, 0, array.length-1);
 		return array;
 	}
-	
+
 	public List<Vertice> minSubsetAllFocos(int[] array, List<Vertice> v){
 		int i = 0;		
 		List<Vertice> result = new Vector<Grafo.Vertice>();
@@ -162,35 +131,6 @@ public class Grafo {
 		}
 		return result;
 	}
-
-//	void createTree(Vertice v, Vertice origem){
-//		//Aresta ultimaAresta = null;
-//		Vertice aux = v;
-//		markFocusFromVertex(aux);
-//		List<Vertice> verticeTree = new Vector<Grafo.Vertice>();
-//		verticeTree.add(aux);			
-//		System.out.println("Arvore: ");
-//		System.out.println(aux.nome);
-//		while (aux.pai != null){
-//			//ultimaAresta = new Aresta(aux, aux.pai);
-//			if(aux.nome == origem.nome)
-//				break;
-//			System.out.println(aux.pai.nome);
-//			verticeTree.add(aux.pai);
-//			markFocusFromVertex(aux.pai);
-//			aux = aux.pai;
-//
-//		}
-//		if(allFocosVisited(visitedFocos)){
-//			trees.add(verticeTree);
-//		}
-//		//		if(!allFocosVisited(aux.focosVisitados)){
-//		//
-//		//			Aresta reversa = new Aresta(ultimaAresta.destino, ultimaAresta.origem);
-//		//			this.removeAresta(aux, reversa);
-//		//			dfs(aux);
-//		//		}
-//	}
 
 	void removeAresta(Vertice v, Aresta aresta){
 		for (int i = 0; i < v.adj.size(); i++) {
@@ -248,13 +188,6 @@ public class Grafo {
 		return r;
 	}
 
-	public void markFocusFromVertex(Vertice v){
-		for (int i = 0; i < v.focos.size(); i++) {
-			int foco = v.focos.get(i);
-			visitedFocos.set(foco-1, true);
-		}
-	}
-
 	public boolean allFocosVisited(List<Boolean> visitedFocos){
 		for (int i = 0; i < visitedFocos.size(); i++) {
 			if(!visitedFocos.get(i)){
@@ -265,7 +198,7 @@ public class Grafo {
 	}
 
 	public void dfs_visit(Vertice v, Vertice origem){
-		//	v.cor = "CINZA";
+		//	v.cor = "CINZA";		
 
 		System.out.println("vertice: "+v.nome);
 		currentTree.add(v);
@@ -275,46 +208,56 @@ public class Grafo {
 
 			//se o foco nao foi visto (atingido) 
 			if(!visitedFocos.get(valueFoco-1)){
-				//System.out.println("passou");
 				visitedFocos.set(valueFoco-1, true);
 				//v.focosVisitados.set(valueFoco-1, true);
 			}
-		}    	    
-		//if(!allFocosVisited(visitedFocos2)){
-		for (int i = 0; i < v.adj.size(); i++) {
-			Vertice u = v.adj.get(i).destino;
-			//u.focosVisitados = v.focosVisitados;
-			//System.out.println(u.nome);
-			//System.out.println(u.cor);
-			if(u.cor == "BRANCA" && !allFocosVisited(visitedFocos)){
-				if(u.d == 0){
-					v.d = v.d+1;
-					u.d = v.d;
-					u.pai = v;
-					if(v.pai == null){
-						dfs_visit(u, origem);
+		}    	    		
+		if(v.adj.size() > 0){ //verifica antes se o vértice não é isolado
+			for (int i = 0; i < v.adj.size(); i++) {
+				Vertice u = v.adj.get(i).destino;
+				System.out.println("Percorrendo adj de "+v.nome);
+				System.out.println("vertice "+u.nome);
+				//System.out.println(u.cor);
+				if(!allFocosVisited(visitedFocos)){
+					if(u.d == 0){
+						v.d = v.d+1;
+						u.d = v.d;
+						u.pai = v;
+						if(v.pai == null){
+							dfs_visit(u, origem);
+						}
+						else if (!u.equals(origem) && !v.pai.equals(u))
+							dfs_visit(u, origem);
 					}
-					else if (!u.equals(origem) && !v.pai.equals(u))
-						dfs_visit(u, origem);
+					else{
+						System.out.println("###################");
+					}
 				}
-			}
-			//else if(!u.cor.equalsIgnoreCase("BRANCA")){
-			//retornar arvore a partir de v
-			//createTree a partir de v
-			else{
-				System.out.println("Lista de adju de "+v.nome);
-				if(allFocosVisited(visitedFocos)){
-					System.out.println("Todos os focos visitados");
-					trees.add(currentTree);
-					currentTree = new Vector<Grafo.Vertice>();
-					clearAllTime();
-					clearVisistedFocos();
-					//createTree(v, origem);
+				//else if(!u.cor.equalsIgnoreCase("BRANCA")){
+				//retornar arvore a partir de v
+				//createTree a partir de v
+				else{
+					System.out.println("Lista de adju de "+v.nome);
+					if(allFocosVisited(visitedFocos)){
+						System.out.println("Todos os focos visitados");
+						trees.add(currentTree);
+						currentTree = new Vector<Grafo.Vertice>();
+						//clearAllTime();
+						clearVisistedFocos();
+						//createTree(v, origem);
+					}
 				}
 			}
 		}
+		else{
+			if(allFocosVisited(visitedFocos)){
+				trees.add(currentTree);
+				currentTree = new Vector<Grafo.Vertice>();
+				clearAllTime();
+				clearVisistedFocos();
+			}
+		}
 		//	v.cor = "PRETA";
-
 	}
 
 	public void clearAllTime(){
@@ -331,7 +274,6 @@ public class Grafo {
 
 	public void dfs(Vertice v){
 		for (int i = 0; i < vertices.size(); i++) {
-			vertices.get(i).cor = "BRANCA";
 			vertices.get(i).pai = null;
 			vertices.get(i).d = 0;
 		}
@@ -351,10 +293,11 @@ public class Grafo {
 	}
 
 	public static void main(String[] args) {
+		long inicio = System.currentTimeMillis();
 		int V, E, F;
 		Vertice vertices[];
 		Grafo g = new Grafo();
-		Arquivo arq = new Arquivo("in1", "saidas1.out");
+		Arquivo arq = new Arquivo("in7", "saidas7.out");
 		V = arq.readInt();
 		E = arq.readInt();
 		vertices = new Vertice[V];
@@ -390,30 +333,13 @@ public class Grafo {
 				resp.append(result.get(i).nome);
 				resp.append(" ");
 			}
-		}
-		respStr = resp.substring(0, resp.length()-1);
+		}		
+		resp = resp.deleteCharAt(resp.length()-1);
+		resp = resp.append("\n");
+		respStr = resp.substring(0, resp.length());
 		arq.print(respStr);
+		long fim = System.currentTimeMillis();
+		System.out.println(fim-inicio);
 		arq.close();
-		/*
-		Vertice s = g.addVertice("s");
-		Vertice t = g.addVertice("t");
-		Vertice y = g.addVertice("y");
-		Vertice k = g.addVertice("k");
-		s.addFoco(1);s.addFoco(2);
-		t.addFoco(1);t.addFoco(2);
-		y.addFoco(3);y.addFoco(4);
-		k.addFoco(3);k.addFoco(4);
-		Aresta st = g.addAresta(s, t);
-		Aresta sy = g.addAresta(s, y);
-		Aresta ty = g.addAresta(t, y);
-		Aresta yt = g.addAresta(y, t);
-		Aresta tk = g.addAresta(t, k);
-		Aresta ky = g.addAresta(k, y);
-		//	g.dfsAll();
-		//System.out.println(g.showMinPath());
-		//	g.getTrees(y);
-		//System.out.println(g);
-		 * 
-		 */
 	}
 }
